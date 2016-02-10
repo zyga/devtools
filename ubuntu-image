@@ -165,4 +165,4 @@ echo "Building image..."
 exec sudo "$udf" core rolling \
     --channel "$channel" --kernel "$kernel" --os "$os" --gadget "$gadget" \
     "$(test -n \"$developer_mode\" && echo --developer-mode)" \
-    -o "$device.img"
+    -o "$device$(test -n \"$developer_mode\" && echo -devel).img"
