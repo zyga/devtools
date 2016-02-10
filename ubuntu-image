@@ -107,7 +107,7 @@ fi
 if [ -z "$udf" ]; then
     echo "Downloading ubuntu-device-flash..."
     download_fname=$(tempfile --prefix=udf-)
-    trap "rm -f $fname" EXIT
+    trap "rm -f $download_fname" EXIT
     if ! wget --quiet --user-agent="ubuntu-image/$version" --output-document="$download_fname" "$udf_url"; then
         echo "Failed to download ubuntu-device-flash"
         exit 1
