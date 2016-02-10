@@ -127,6 +127,7 @@ fi
 download() {
     blob_url="$1"
     blob_hash="$2"
+    msg="$3"
     if [ -f "$cache_dir/blob.$blob_hash" ]; then
         cached_blob_hash=$(sha512sum < "$cache_dir/blob.$blob_hash" | cut -f 1 -d ' ')
         if [ "$cached_blob_hash" != "$blob_hash" ]; then
@@ -135,7 +136,11 @@ download() {
         fi
         return
     fi
-    echo "Downloading $blob_url..."
+    if [ -z "$msg" ]; then
+        echo "Downloading $blob_url..."
+    else
+        echo "$msg"
+    fi
     blob_download_fname=$(tempfile --prefix=blob-)
     trap "rm -f $blob_download_fname" EXIT
     if ! wget --quiet --user-agent="ubuntu-image/$version" --output-document="$blob_download_fname" "$blob_url"; then
@@ -154,15 +159,15 @@ download() {
 # Download snaps that are not published in the store
 
 if [ -n "$os_url" ]; then
-    download "$os_url" "$os_hash"
+    download "$os_url" "$os_hash" "Downloading OS snap..."
     os="$cache_dir/blob.$os_hash"
 fi
 if [ -n "$kernel_url" ]; then
-    download "$kernel_url" "$kernel_hash"
+    download "$kernel_url" "$kernel_hash" "Downloading kernel snap..."
     kernel="$cache_dir/blob.$kernel_hash"
 fi
 if [ -n "$gadget_url" ]; then
-    download "$gadget_url" "$gadget_hash"
+    download "$gadget_url" "$gadget_hash" "Downloading gadget snap..."
     gadget="$cache_dir/blob.$gadget_hash"
 fi
 
