@@ -142,7 +142,7 @@ download() {
         echo "$msg"
     fi
     blob_download_fname=$(tempfile --prefix=blob-)
-    trap "rm -f $blob_download_fname" EXIT
+    trap rm -f $blob_download_fname EXIT
     if ! wget --quiet --user-agent="ubuntu-image/$version" --output-document="$blob_download_fname" "$blob_url"; then
         echo "Failed to download $blob_url"
         exit 1
