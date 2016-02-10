@@ -7,12 +7,16 @@ version="0.1"
 while [ -n "$1" ]; do
     case "$1" in 
         --help|-h)
-            echo "Usage: ubuntu-image [device name]"
+            echo "Usage: ubuntu-image [--developer-mode] [device name]"
             exit 0
             ;;
         --version)
             echo "ubuntu-image, version $version"
             exit 0
+            ;;
+        --developer-mode)
+            developer_mode=yes
+            shift
             ;;
         *)
             # Perhaps it is a device name?
@@ -123,7 +127,7 @@ fi
 
 echo "Building image..."
 
-exec sudo "$udf" core rolling \
+exec echo sudo "$udf" core rolling \
     --channel $channel --kernel $kernel --os $os --gadget $gadget \
-    --developer-mode \
+    $(test -n "$developer_mode" && echo --developer-mode) \
     -o "$device.img"
