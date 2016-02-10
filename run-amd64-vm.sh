@@ -4,4 +4,4 @@ sudo kvm \
     -nographic \
     -snapshot \
     -redir tcp:8022::22 \
-    ubuntu-snappy-edge-amd64.img
+    pc.img
