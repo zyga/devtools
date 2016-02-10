@@ -1,0 +1,129 @@
+#!/bin/sh
+
+version="0.1"
+
+# Handle command line arguments
+
+while [ -n "$1" ]; do
+    case "$1" in 
+        --help|-h)
+            echo "Usage: ubuntu-image [device name]"
+            exit 0
+            ;;
+        --version)
+            echo "ubuntu-image, version $version"
+            exit 0
+            ;;
+        *)
+            # Perhaps it is a device name?
+            case $1 in
+                bbb|pi2|pc)
+                    device="$1"
+                    shift
+                    ;;
+                *)
+                    echo "Unrecognized argument: $1" 1>&1
+                    exit 1
+                    ;;
+            esac
+            ;;
+    esac
+done
+
+# Interactively ask about the device if necessary.
+
+while [ -z "$device" ]; do
+    echo "Which device do you have?"
+    echo
+    echo "Devices supported by Canonical (official)"
+    echo " pc:  Generic PC (x86-64 intel or AMD)"
+    echo " pi2: Raspberry Pi 2"
+    echo
+    echo "Community devices"
+    echo " bbb: Beagle Bone Black"
+    echo
+    read device 
+    case "$device" in
+        bbb|pi2|pc)
+            ;;
+        *)
+            echo "Unrecognized device name: $device"
+            device=""
+            ;;
+    esac
+done
+
+# Re-affirm the user as to which device is seleced 
+
+echo "Selected device: $device"
+
+# Pick the right values for ubuntu-device-flash
+
+channel=edge
+os=ubuntu-core.canonical
+case $device in
+    pi2)
+        kernel=canonical-pi2-linux.canonical
+        gadget=canonical-pi2.canonical
+        ;;
+    bbb)
+        kernel=linux-armhf.mvo
+        gadget=beagleblack.mvo
+        ;;
+    pc)
+        kernel=canonical-pc-linux.canonical
+        gadget=canonical-pc.canonical
+        ;;
+    *)
+        echo "BUG: no information how to build an image for device: $device"
+        exit 2
+        ;;
+esac
+
+# Get the right version of ubuntu-device-flash
+
+cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/ubuntu-image"
+udf_sha512_hash=d8acf6b199a0a73def00dd61302afc99718cee101ec0c8d2ef845168ca9b5820ed943e90f17a6d743ee368b2337f956765670f4128210dca7df71501035f7391
+udf_url=http://people.canonical.com/~mvo/all-snaps/ubuntu-device-flash
+cached_fname="$cache_dir/ubuntu-device-flash.$udf_sha512_hash"
+
+# Verify integrity of ubuntu-device-flash
+
+if [ -f "$cached_fname" ]; then
+    local_sha512_hash=$(sha512sum < "$cached_fname" | cut -f 1 -d ' ')
+    if [ "$local_sha512_hash" != "$udf_sha512_hash" ]; then
+        echo "Removing corrupted copy of ubuntu-device-flash"
+        rm -f "$cached_fname"
+    else
+        udf="$cached_fname"
+    fi
+fi
+
+# Download and verify integrity of ubuntu-device-flash
+if [ -z "$udf" ]; then
+    echo "Downloading ubuntu-device-flash..."
+    download_fname=$(tempfile --prefix=udf-)
+    trap "rm -f $fname" EXIT
+    if ! wget --quiet --user-agent="ubuntu-image/$version" --output-document="$download_fname" "$udf_url"; then
+        echo "Failed to download ubuntu-device-flash"
+        exit 1
+    fi
+    download_sha512_hash=$(sha512sum < "$download_fname" | cut -f 1 -d ' ')
+    if [ "$download_sha512_hash" != "$udf_sha512_hash" ]; then
+        echo "Failed to verify integrity of ubuntu-device-flash"
+        exit 1
+    fi
+    chmod +x "$download_fname"
+    udf="$download_fname"
+    mkdir -p "$cache_dir"
+    mv --no-clobber "$download_fname" "$cached_fname" && udf="$cached_fname"
+fi
+
+# Run ubuntu device flash
+
+echo "Building image..."
+
+exec sudo "$udf" core rolling \
+    --channel $channel --kernel $kernel --os $os --gadget $gadget \
+    --developer-mode \
+    -o "$device.img"
