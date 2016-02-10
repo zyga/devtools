@@ -1,6 +1,6 @@
 #!/bin/sh
 
-version="0.3"
+version="0.4"
 
 # Handle command line arguments
 
