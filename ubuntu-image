@@ -96,10 +96,11 @@ download() {
     if [ -f "$cache_dir/blob.$blob_hash" ]; then
         cached_blob_hash=$(sha512sum < "$cache_dir/blob.$blob_hash" | cut -f 1 -d ' ')
         if [ "$cached_blob_hash" != "$blob_hash" ]; then
-            echo "Removing corrupted copy of $blob_url"
+            echo "Removing corrupted copy of $(basename $blob_url)"
             rm -f "$cache_dir/blob.$blob_hash"
+        else
+            return
         fi
-        return
     fi
     if [ -z "$msg" ]; then
         echo "Downloading $blob_url..."
