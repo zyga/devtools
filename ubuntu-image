@@ -66,6 +66,8 @@ echo "Selected device: $device"
 
 channel=edge
 os=ubuntu-core.canonical
+udf_url=http://people.canonical.com/~mvo/all-snaps/ubuntu-device-flash
+udf_hash=d8acf6b199a0a73def00dd61302afc99718cee101ec0c8d2ef845168ca9b5820ed943e90f17a6d743ee368b2337f956765670f4128210dca7df71501035f7391
 case $device in
     pi2)
         kernel=canonical-pi2-linux.canonical
@@ -85,44 +87,7 @@ case $device in
         ;;
 esac
 
-# Get the right version of ubuntu-device-flash
-
 cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/ubuntu-image"
-udf_sha512_hash=d8acf6b199a0a73def00dd61302afc99718cee101ec0c8d2ef845168ca9b5820ed943e90f17a6d743ee368b2337f956765670f4128210dca7df71501035f7391
-udf_url=http://people.canonical.com/~mvo/all-snaps/ubuntu-device-flash
-cached_fname="$cache_dir/ubuntu-device-flash.$udf_sha512_hash"
-
-# Verify integrity of ubuntu-device-flash
-
-if [ -f "$cached_fname" ]; then
-    local_sha512_hash=$(sha512sum < "$cached_fname" | cut -f 1 -d ' ')
-    if [ "$local_sha512_hash" != "$udf_sha512_hash" ]; then
-        echo "Removing corrupted copy of ubuntu-device-flash"
-        rm -f "$cached_fname"
-    else
-        udf="$cached_fname"
-    fi
-fi
-
-# Download and verify integrity of ubuntu-device-flash
-if [ -z "$udf" ]; then
-    echo "Downloading ubuntu-device-flash..."
-    download_fname=$(tempfile --prefix=udf-)
-    trap "rm -f $download_fname" EXIT
-    if ! wget --quiet --user-agent="ubuntu-image/$version" --output-document="$download_fname" "$udf_url"; then
-        echo "Failed to download ubuntu-device-flash"
-        exit 1
-    fi
-    download_sha512_hash=$(sha512sum < "$download_fname" | cut -f 1 -d ' ')
-    if [ "$download_sha512_hash" != "$udf_sha512_hash" ]; then
-        echo "Failed to verify integrity of ubuntu-device-flash"
-        exit 1
-    fi
-    chmod +x "$download_fname"
-    udf="$download_fname"
-    mkdir -p "$cache_dir"
-    mv --no-clobber "$download_fname" "$cached_fname" && udf="$cached_fname"
-fi
 
 download() {
     blob_url="$1"
@@ -155,6 +120,14 @@ download() {
     mkdir -p "$cache_dir"
     mv --no-clobber "$blob_download_fname" "$cache_dir/blob.$blob_hash"
 }
+
+# Download and verify integrity of ubuntu-device-flash
+
+if [ -n "$udf_url" ]; then
+    download "$udf_url" "$udf_hash" "Downloading ubuntu-device-flash..."
+    udf="$cache_dir/blob.$udf_hash"
+    chmod +x "$udf"
+fi
 
 # Download snaps that are not published in the store
 
