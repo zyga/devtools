@@ -46,6 +46,7 @@ while [ -z "$device" ]; do
     echo "Community devices"
     echo " bbb: Beagle Bone Black"
     echo
+    echo -n "device> "
     read device 
     case "$device" in
         bbb|pi2|pc)
