@@ -3,8 +3,10 @@
 This repository holds my personal snappy development tools.  Improvements are
 welcome, just shoot merge requests at me.
 
-My work-flow involves using a checkout of github.com/ubuntu-core/snappy in my $GOPATH,
-building and testing various parts of snappy during daily development.
+My work-flow involves using a checkout of http://github.com/ubuntu-core/snappy
+in my ``$GOPATH``, building and testing various parts of snappy during daily development.
+
+## Working with developer boards and VMs
 
 For on-device testing I use the ``ubuntu-image`` script to build development
 images. Once a device is "flashed" it can stay up indefinitely. Devices that
@@ -17,6 +19,8 @@ in the VM is persistent.
 
 In both cases I use the ``refresh-bits.sh`` script to push new, ``snap``,
 ``snapd`` and ``snappy`` (deprecated) binaries over. This requires a certain SSH setup:
+
+## SSH configuration
 
 Put something similar to your ``~/.ssh/config`` file. Do change ``bbb-1.lan``
 and ``pi2-1.lan`` to an appropriate hostname (or IP address) that is valid in
