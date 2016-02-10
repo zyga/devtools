@@ -124,6 +124,52 @@ if [ -z "$udf" ]; then
     mv --no-clobber "$download_fname" "$cached_fname" && udf="$cached_fname"
 fi
 
+download() {
+    blob_url="$1"
+    blob_hash="$2"
+    if [ -f "$cache_dir/blob.$blob_hash" ]; then
+        cached_blob_hash=$(sha512sum < "$cache_dir/blob.$blob_hash" | cut -f 1 -d ' ')
+        if [ "$cached_blob_hash" != "$blob_hash" ]; then
+            echo "Removing corrupted copy of $blob_url"
+            rm -f "$cache_dir/blob.$blob_hash"
+        fi
+        return
+    fi
+    echo "Downloading $blob_url..."
+    blob_download_fname=$(tempfile --prefix=blob-)
+    trap "rm -f $blob_download_fname" EXIT
+    if ! wget --quiet --user-agent="ubuntu-image/$version" --output-document="$blob_download_fname" "$blob_url"; then
+        echo "Failed to download $blob_url"
+        exit 1
+    fi
+    blob_download_hash=$(sha512sum < "$blob_download_fname" | cut -f 1 -d ' ')
+    if [ "$blob_download_hash" != "$blob_hash" ]; then
+        echo "Failed to verify integrity of $blob_url"
+        exit 1
+    fi
+    mkdir -p "$cache_dir"
+    mv --no-clobber "$blob_download_fname" "$cache_dir/blob.$blob_hash"
+}
+
+# Download snaps that are not published in the store
+
+if [ -n "$os_url" ]; then
+    download "$os_url" "$os_hash"
+    os="$cache_dir/blob.$os_hash"
+fi
+if [ -n "$kernel_url" ]; then
+    download "$kernel_url" "$kernel_hash"
+    kernel="$cache_dir/blob.$kernel_hash"
+fi
+if [ -n "$gadget_url" ]; then
+    download "$gadget_url" "$gadget_hash"
+    gadget="$cache_dir/blob.$gadget_hash"
+fi
+
+test -z "$os" && echo "BUG: no OS snap for device: $device" && exit 2
+test -z "$kernel" && echo "BUG: no kernel snap for device: $device" && exit 2
+test -z "$gadget" && echo "BUG: no gadget snap for device: $device" && exit 2
+
 # Run ubuntu device flash
 
 echo "Building image..."
