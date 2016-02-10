@@ -40,7 +40,7 @@ while [ -z "$device" ]; do
     echo "Which device do you have?"
     echo
     echo "Devices supported by Canonical (official)"
-    echo " pc:  Generic PC (x86-64 intel or AMD)"
+    echo " pc:  Generic PC (x86-64 Intel or AMD)"
     echo " pi2: Raspberry Pi 2"
     echo
     echo "Community devices"
