@@ -68,8 +68,14 @@ echo "Selected device: $device"
 
 channel=edge
 os=ubuntu-core.canonical
-udf_url=http://people.canonical.com/~mvo/all-snaps/ubuntu-device-flash
+gadget_hash=
+gadget_url=
+kernel_hash=
+kernel_url=
+os_hash=
+os_url=
 udf_hash=d8acf6b199a0a73def00dd61302afc99718cee101ec0c8d2ef845168ca9b5820ed943e90f17a6d743ee368b2337f956765670f4128210dca7df71501035f7391
+udf_url=http://people.canonical.com/~mvo/all-snaps/ubuntu-device-flash
 case $device in
     pc)
         kernel=canonical-pc-linux.canonical
