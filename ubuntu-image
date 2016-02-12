@@ -21,7 +21,7 @@ while [ -n "$1" ]; do
         *)
             # Perhaps it is a device name?
             case $1 in
-                bbb|pi2|pc|i386|dragon)
+                pc|i386|pi2|bbb|dragon)
                     device="$1"
                     shift
                     ;;
@@ -51,7 +51,7 @@ while [ -z "$device" ]; do
     echo -n "device> "
     read device 
     case "$device" in
-        bbb|pi2|pc|i386|dragon)
+        pc|i386|pi2|bbb|dragon)
             ;;
         *)
             echo "Unrecognized device name: $device"
