@@ -14,7 +14,7 @@ don't have automatic update available need to be re-flashed periodically, as
 updates are rolled out.
 
 For on-VM testing I use ``ubuntu-image --developer-mode pc`` along with
-``run-pc-devel-vm``. The VM can be killed at any time, nothing that is changed
+``run-devel-vm pc``. The VM can be killed at any time, nothing that is changed
 in the VM is persistent.
 
 In both cases I use the ``refresh-bits.sh`` script to push new, ``snap``,
