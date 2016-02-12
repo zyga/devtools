@@ -83,12 +83,8 @@ case $device in
         gadget=canonical-pc.canonical
         ;;
     dragon)
-        os_url=http://people.canonical.com/~ogra/snappy/all-snaps/dragonboard/ubuntu-core-arm64_16.04.0-2_arm64.snap
-        os_hash=9949d337a219b706e56253c4c89df1293ae6e1d14909677208a14fab9c40c27c72937bab93d0b863b064b167d7844358d0be344e7ba1aa9ad2945fc99490abc9
-        kernel_url=http://people.canonical.com/~ogra/snappy/all-snaps/dragonboard/canonical-dragon-linux_4.2.0-2012-generic-dragon410c_arm64.snap
-        kernel_hash=85fc75d0f1042ef988c070a0f10127044107e96a5e15ebaead66371c85f96b7ed44b2953bb22011f2cc99f07700e0f3d634f6229379190ab7ddaf0d3de8e74e4
-        gadget_url=http://people.canonical.com/~ogra/snappy/all-snaps/dragonboard/canonical-dragon_0.6_all.snap
-        gadget_hash=e9d33cda70f8384c0ec31e4822a6ed457c98ca7ce6682b93875390507903413a04d81e9a8c8966c32d2d32865f56e789be3cf25f8a66b1f1658b8fa4f8c443fe
+        kernel=canonical-dragon-linux.canonical
+        gadget=canonical-dragon.canonical
         ;;
     *)
         echo "BUG: no information how to build an image for device: $device"
