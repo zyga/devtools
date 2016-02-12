@@ -169,7 +169,12 @@ test -z "$gadget" && echo "BUG: no gadget snap for device: $device" && exit 2
 
 echo "Building image..."
 
-exec sudo "$udf" core rolling \
-    --channel "$channel" --kernel "$kernel" --os "$os" --gadget "$gadget" \
-    "$(test -n \"$developer_mode\" && echo --developer-mode)" \
-    -o "$device$(test -n \"$developer_mode\" && echo -devel).img"
+if [ -n "$developer_mode" ]; then
+    exec sudo "$udf" core rolling \
+        --channel "$channel" --kernel "$kernel" --os "$os" --gadget "$gadget" \
+        --developer-mode -o "${device}-devel.img"
+else
+    exec sudo "$udf" core rolling \
+        --channel "$channel" --kernel "$kernel" --os "$os" --gadget "$gadget" \
+        -o "$device.img"
+fi
