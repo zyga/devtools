@@ -21,7 +21,7 @@ while [ -n "$1" ]; do
         *)
             # Perhaps it is a device name?
             case $1 in
-                bbb|pi2|pc|dragon)
+                bbb|pi2|pc|i386|dragon)
                     device="$1"
                     shift
                     ;;
@@ -40,17 +40,18 @@ while [ -z "$device" ]; do
     echo "Which device do you have?"
     echo
     echo "Devices supported by Canonical (official)"
-    echo " pc:     Generic PC (x86-64 Intel or AMD)"
-    echo " pi2:    Raspberry Pi 2"
+    echo " pc:      Modern Intel/AMD Computer (64 bit)"
+    echo " i386:    Legacy Intel/AMD Computer (32 bit)"
+    echo " pi2:     Raspberry Pi 2"
     echo
     echo "Community devices"
-    echo " bbb:    BeagleBone Black"
-    echo " dragon: 410c DragonBoard"
+    echo " bbb:     BeagleBone Black"
+    echo " dragon:  410c DragonBoard"
     echo
     echo -n "device> "
     read device 
     case "$device" in
-        bbb|pi2|pc|dragon)
+        bbb|pi2|pc|i386|dragon)
             ;;
         *)
             echo "Unrecognized device name: $device"
@@ -70,6 +71,14 @@ os=ubuntu-core.canonical
 udf_url=http://people.canonical.com/~mvo/all-snaps/ubuntu-device-flash
 udf_hash=d8acf6b199a0a73def00dd61302afc99718cee101ec0c8d2ef845168ca9b5820ed943e90f17a6d743ee368b2337f956765670f4128210dca7df71501035f7391
 case $device in
+    pc)
+        kernel=canonical-pc-linux.canonical
+        gadget=canonical-pc.canonical
+        ;;
+    i386)
+        kernel=canonical-pc-linux.canonical
+        gadget=canonical-i386.canonical
+        ;;
     pi2)
         kernel=canonical-pi2-linux.canonical
         gadget=canonical-pi2.canonical
@@ -77,10 +86,6 @@ case $device in
     bbb)
         kernel=linux-armhf.mvo
         gadget=beagleblack.mvo
-        ;;
-    pc)
-        kernel=canonical-pc-linux.canonical
-        gadget=canonical-pc.canonical
         ;;
     dragon)
         kernel=canonical-dragon-linux.canonical
