@@ -14,10 +14,6 @@ while [ -n "$1" ]; do
             echo "run-devel-vm, version $version"
             exit 0
             ;;
-        --developer-mode)
-            developer_mode=yes
-            shift
-            ;;
         *)
             # Perhaps it is a device name?
             case $1 in
