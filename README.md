@@ -34,19 +34,16 @@ Host snappy-vm
     KbdInteractiveAuthentication no
     StrictHostKeyChecking no
     UserKnownHostsFile /dev/null
-    IdentityFile ~/.ssh/id_rsa
 
 Host snappy-bbb
     HostName bbb-1.lan
     User ubuntu
     KbdInteractiveAuthentication no
     StrictHostKeyChecking no
-    IdentityFile ~/.ssh/id_rsa
 
 Host snappy-rpi2
     HostName pi2-1.lan
     User ubuntu
     KbdInteractiveAuthentication no
     StrictHostKeyChecking no
-    IdentityFile ~/.ssh/id_rsa
 ```
