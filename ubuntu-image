@@ -7,7 +7,7 @@ version="0.7"
 while [ -n "$1" ]; do
     case "$1" in 
         --help|-h)
-            echo "Usage: ubuntu-image [--developer-mode] [device name]"
+            echo "Usage: ubuntu-image [--[no-]developer-mode] [device name]"
             exit 0
             ;;
         --version)
@@ -15,7 +15,11 @@ while [ -n "$1" ]; do
             exit 0
             ;;
         --developer-mode)
-            developer_mode=yes
+            image_kind=devel
+            shift
+            ;;
+        --no-developer-mode)
+            image_kind=vanilla
             shift
             ;;
         *)
@@ -56,6 +60,30 @@ while [ -z "$device" ]; do
         *)
             echo "Unrecognized device name: $device"
             device=""
+            ;;
+    esac
+done
+
+# Interactively ask if developer mode should be enabled.
+
+while [ -z "$image_kind" ]; do
+    echo "What kind of image do you want to build?"
+    echo
+    echo "devel:    Developer image that contains your public SSH key"
+    echo "vanilla:  Pristine image intended for sharing or installation"
+    echo
+    echo -n "image kind> "
+    read image_kind
+    case "$image_kind" in
+        devel)
+            image_kind=devel
+            ;;
+        vanilla)
+            image_kind=vanilla
+            ;;
+        *)
+            echo "Unrecognized image kind: $image_kind"
+            image_kind=
             ;;
     esac
 done
@@ -169,12 +197,18 @@ test -z "$gadget" && echo "BUG: no gadget snap for device: $device" && exit 2
 
 echo "Building image..."
 
-if [ -n "$developer_mode" ]; then
-    exec sudo "$udf" core rolling \
-        --channel "$channel" --kernel "$kernel" --os "$os" --gadget "$gadget" \
-        --developer-mode -o "${device}-devel.img"
-else
-    exec sudo "$udf" core rolling \
-        --channel "$channel" --kernel "$kernel" --os "$os" --gadget "$gadget" \
-        -o "$device.img"
-fi
+case "$image_kind" in
+    vanilla)
+        exec sudo "$udf" core rolling \
+            --channel "$channel" --kernel "$kernel" --os "$os" --gadget "$gadget" \
+            -o "$device.img"
+        ;;
+    devel)
+        exec sudo "$udf" core rolling \
+            --channel "$channel" --kernel "$kernel" --os "$os" --gadget "$gadget" \
+            --developer-mode -o "${device}-devel.img"
+        ;;
+    *)
+        echo "BUG: no information how to build image kind: $image_kind" && exit 2
+        ;;
+esac
