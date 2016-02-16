@@ -19,8 +19,8 @@ while [ "$1" != '' ]; do
             export CC=arm-linux-gnueabihf-gcc
             shift
             ;;
-        --rpi2)
-            SNAPPY_HOST=snappy-rpi2
+        --pi2)
+            SNAPPY_HOST=snappy-pi2
             export GOARCH=arm
             export GOARM=7
             export CGO_ENABLED=1

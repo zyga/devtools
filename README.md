@@ -41,7 +41,7 @@ Host snappy-bbb
     KbdInteractiveAuthentication no
     StrictHostKeyChecking no
 
-Host snappy-rpi2
+Host snappy-pi2
     HostName pi2-1.lan
     User ubuntu
     KbdInteractiveAuthentication no
