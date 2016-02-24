@@ -35,15 +35,16 @@ Host snappy-vm
     StrictHostKeyChecking no
     UserKnownHostsFile /dev/null
 
+Host snappy-pi2
+    HostName pi2-1.lan
+    User ubuntu
+    KbdInteractiveAuthentication no
+    StrictHostKeyChecking no
+
 Host snappy-bbb
     HostName bbb-1.lan
     User ubuntu
     KbdInteractiveAuthentication no
     StrictHostKeyChecking no
 
-Host snappy-pi2
-    HostName pi2-1.lan
-    User ubuntu
-    KbdInteractiveAuthentication no
-    StrictHostKeyChecking no
 ```
