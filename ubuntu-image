@@ -88,7 +88,7 @@ while [ -z "$image_kind" ]; do
     esac
 done
 
-# Re-affirm the user as to which device is seleced 
+# Re-affirm the user as to which device is selected
 
 echo "Selected device: $device"
 
