@@ -27,12 +27,25 @@ while [ "$1" != '' ]; do
             export CC=arm-linux-gnueabihf-gcc
             shift
             ;;
-        --arm)
+        --dragon)
+            SNAPPY_HOST=snappy-dragon
+            export GOARCH=arm64
+            export CGO_ENABLED=1
+            export CC=aarch64-linux-gnu-gcc
+            shift
+            ;;
+        --arm|--armv7)
             shift
             export GOARCH=arm
             export GOARM=7
             export CGO_ENABLED=1
             export CC=arm-linux-gnueabihf-gcc
+            ;;
+        --aarch64|--arm64)
+            export GOARCH=arm64
+            export CGO_ENABLED=1
+            export CC=aarch64-linux-gnu-gcc
+            shift
             ;;
         snap|snappy)
             go build -o $1.$GOARCH github.com/ubuntu-core/snappy/cmd/$1
