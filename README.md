@@ -22,9 +22,9 @@ In both cases I use the ``refresh-bits.sh`` script to push new, ``snap``,
 
 ## SSH configuration
 
-Put something similar to your ``~/.ssh/config`` file. Do change ``bbb-1.lan``
-and ``pi2-1.lan`` to an appropriate hostname (or IP address) that is valid in
-your setup.
+Put something similar to your ``~/.ssh/config`` file. Do change ``pi2-1.lan``,
+``dragon-1.lan`` and ``bbb-1.lan`` to an appropriate hostname (or IP address)
+that is valid in your setup.
 
 ```
 Host snappy-vm
@@ -37,6 +37,12 @@ Host snappy-vm
 
 Host snappy-pi2
     HostName pi2-1.lan
+    User ubuntu
+    KbdInteractiveAuthentication no
+    StrictHostKeyChecking no
+
+Host snappy-dragon
+    HostName dragon-1.lan
     User ubuntu
     KbdInteractiveAuthentication no
     StrictHostKeyChecking no
