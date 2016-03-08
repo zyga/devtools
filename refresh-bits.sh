@@ -11,6 +11,10 @@ while [ "$1" != '' ]; do
             SNAPPY_HOST=snappy-vm
             export GOARCH=amd64
             ;;
+        --host)
+            SNAPPY_HOST="$2"
+            shift 2
+            ;;
         --bbb)
             SNAPPY_HOST=snappy-bbb
             export GOARCH=arm
