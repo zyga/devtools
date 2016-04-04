@@ -122,7 +122,7 @@ case $device in
         gadget=beagleblack.mvo
         ;;
     dragon)
-        kernel=canonical-dragon-linux.canonical
+        kernel=canonical-snapdragon-linux.canonical
         gadget=canonical-dragon.canonical
         ;;
     *)
