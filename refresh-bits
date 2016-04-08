@@ -103,14 +103,19 @@ while [ "$1" != '' ]; do
             shift
             ;;
         snap|snappy)
-            go build -o "$1.$GOARCH" "github.com/ubuntu-core/snappy/cmd/$1"
-            scp "$1.$GOARCH" "$SNAPPY_HOST:$1"
+            echo "Building $1"
+            go build -o "$1.$GOARCH" "github.com/ubuntu-core/snappy/cmd/$1" || exit 1
+            echo "Copying $1 to target machine"
+            scp "$1.$GOARCH" "$SNAPPY_HOST:$1" || exit 1
             shift
             ;;
         snapd)
-            go build -o "$1.$GOARCH" "github.com/ubuntu-core/snappy/cmd/$1"
-            ssh "$SNAPPY_HOST" sudo pkill snapd || :
-            scp "$1.$GOARCH" "$SNAPPY_HOST:$1"
+            echo "Building $1"
+            go build -o "$1.$GOARCH" "github.com/ubuntu-core/snappy/cmd/$1" || exit 1
+            echo "Killing snapd on the target machine"
+            ssh "$SNAPPY_HOST" sudo pkill -9 snapd || :
+            echo "Copying $1 to target machine"
+            scp "$1.$GOARCH" "$SNAPPY_HOST:$1" || exit 1
             shift
             ;;
         setup)
@@ -120,12 +125,13 @@ while [ "$1" != '' ]; do
             ssh "$SNAPPY_HOST" sudo systemctl stop ubuntu-snappy.snapd.socket
             ssh "$SNAPPY_HOST" sudo systemctl stop ubuntu-snappy.snapd.service
             echo "Killing any locally-started snapd"
-            ssh "$SNAPPY_HOST" sudo pkill snapd || :
+            ssh "$SNAPPY_HOST" sudo pkill -9 snapd || :
             echo "Inspecting VM state"
             ssh "$SNAPPY_HOST" systemctl status ubuntu-snappy.snapd.socket ubuntu-snappy.snapd.service || :
             shift
             ;;
         run-snapd)
+            echo "Running snapd (use sudo snap to talk to it)"
             ssh "$SNAPPY_HOST" sudo /lib/systemd/systemd-activate -l /run/snapd.socket ./snapd
             shift
             ;;
