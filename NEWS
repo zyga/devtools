@@ -1,5 +1,6 @@
 ubuntu-image 0.9:
  - Refresh hashes for ubuntu-device-flash
+ - Improve usability of refresh-bits
 ubuntu-image 0.8:
  - Mark dragon board as officially supported
  

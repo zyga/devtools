@@ -17,8 +17,9 @@ For on-VM testing I use ``ubuntu-image --developer-mode pc`` along with
 ``run-devel-vm pc``. The VM can be killed at any time, nothing that is changed
 in the VM is persistent.
 
-In both cases I use the ``refresh-bits.sh`` script to push new, ``snap``,
-``snapd`` and ``snappy`` (deprecated) binaries over. This requires a certain SSH setup:
+In both cases I use the ``refresh-bits`` script to push new, ``snap``,
+``snapd`` and ``snappy`` (deprecated) binaries over. This requires a certain
+SSH setup:
 
 ## SSH configuration
 
