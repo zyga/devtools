@@ -102,7 +102,7 @@ kernel_hash=
 kernel_url=
 os_hash=
 os_url=
-udf_hash=d8acf6b199a0a73def00dd61302afc99718cee101ec0c8d2ef845168ca9b5820ed943e90f17a6d743ee368b2337f956765670f4128210dca7df71501035f7391
+udf_hash=b015a47061d74d958cd8e34f5df0cd004e10a2b9f969be12955a1b96f47870c81430eeea63ee1a302ccd78e8e9e1de6143ba36474ffff517cefe3ef2747537d9
 udf_url=http://people.canonical.com/~mvo/all-snaps/ubuntu-device-flash
 case $device in
     pc)
