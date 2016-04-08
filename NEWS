@@ -1,3 +1,5 @@
+ubuntu-image 0.9:
+ - Refresh hashes for ubuntu-device-flash
 ubuntu-image 0.8:
  - Mark dragon board as officially supported
  
