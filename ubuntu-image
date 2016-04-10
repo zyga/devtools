@@ -1,13 +1,24 @@
 #!/bin/sh
 
-version="0.9"
+version="0.10"
+
+show_device_names() {
+    echo "Devices supported by Canonical (official)"
+    echo " pc:      Modern Intel/AMD Computer (64 bit)"
+    echo " i386:    Legacy Intel/AMD Computer (32 bit)"
+    echo " pi2:     Raspberry Pi 2"
+    echo " dragon:  410c DragonBoard"
+    echo
+    echo "Community devices"
+    echo " bbb:     BeagleBone Black"
+}
 
 # Handle command line arguments
 
 while [ -n "$1" ]; do
     case "$1" in 
         --help|-h)
-            echo "Usage: ubuntu-image [--[no-]developer-mode] [device name]"
+            echo "Usage: ubuntu-image [--[no-]developer-mode] [device-name|?]"
             exit 0
             ;;
         --version)
@@ -21,6 +32,12 @@ while [ -n "$1" ]; do
         --no-developer-mode)
             image_kind=vanilla
             shift
+            ;;
+        '?')
+            echo "Recognized device names"
+            echo
+            show_device_names
+            exit
             ;;
         *)
             # Perhaps it is a device name?
@@ -43,14 +60,7 @@ done
 while [ -z "$device" ]; do
     echo "Which device do you have?"
     echo
-    echo "Devices supported by Canonical (official)"
-    echo " pc:      Modern Intel/AMD Computer (64 bit)"
-    echo " i386:    Legacy Intel/AMD Computer (32 bit)"
-    echo " pi2:     Raspberry Pi 2"
-    echo " dragon:  410c DragonBoard"
-    echo
-    echo "Community devices"
-    echo " bbb:     BeagleBone Black"
+    show_device_names
     echo
     echo -n "device> "
     read device 

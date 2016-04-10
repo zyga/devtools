@@ -1,3 +1,5 @@
+ubuntu-image 0.10:
+ - Show available device names when started with "?"
 ubuntu-image 0.9:
  - Refresh hashes for ubuntu-device-flash
  - Improve usability of refresh-bits
