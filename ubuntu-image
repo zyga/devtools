@@ -105,7 +105,7 @@ echo "Selected device: $device"
 # Pick the right values for ubuntu-device-flash
 
 channel=edge
-os=ubuntu-core.canonical
+os=ubuntu-core
 gadget_hash=
 gadget_url=
 kernel_hash=
@@ -116,24 +116,24 @@ udf_hash=3d29987ba68844d48a45dac1a5371b5ba89f9c261762752ce5dd159ad6fd15f525ec70b
 udf_url=http://people.canonical.com/~mvo/all-snaps/ubuntu-device-flash
 case $device in
     pc)
-        kernel=canonical-pc-linux.canonical
-        gadget=canonical-pc.canonical
+        kernel=canonical-pc-linux
+        gadget=canonical-pc
         ;;
     i386)
-        kernel=canonical-pc-linux.canonical
-        gadget=canonical-i386.canonical
+        kernel=canonical-pc-linux
+        gadget=canonical-i386
         ;;
     pi2)
-        kernel=canonical-pi2-linux.canonical
-        gadget=canonical-pi2.canonical
+        kernel=canonical-pi2-linux
+        gadget=canonical-pi2
         ;;
     bbb)
-        kernel=linux-armhf.mvo
-        gadget=beagleblack.mvo
+        kernel=linux-armhf
+        gadget=beagleblack
         ;;
     dragon)
-        kernel=canonical-snapdragon-linux.canonical
-        gadget=canonical-dragon.canonical
+        kernel=canonical-snapdragon-linux
+        gadget=canonical-dragon
         ;;
     *)
         echo "BUG: no information how to build an image for device: $device"
