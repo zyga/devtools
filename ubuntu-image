@@ -16,7 +16,7 @@ show_device_names() {
 # Handle command line arguments
 
 while [ -n "$1" ]; do
-    case "$1" in 
+    case "$1" in
         --help|-h)
             echo "Usage: ubuntu-image [--[no-]developer-mode] [device-name|?]"
             exit 0
@@ -63,7 +63,7 @@ while [ -z "$device" ]; do
     show_device_names
     echo
     echo -n "device> "
-    read device 
+    read device
     case "$device" in
         pc|i386|pi2|dragon|bbb)
             ;;
