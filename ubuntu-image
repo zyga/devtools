@@ -16,7 +16,7 @@ show_device_names() {
 # Handle command line arguments
 
 while [ -n "$1" ]; do
-    case "$1" in 
+    case "$1" in
         --help|-h)
             echo "Usage: ubuntu-image [--[no-]developer-mode] [device-name|?]"
             exit 0
@@ -63,7 +63,7 @@ while [ -z "$device" ]; do
     show_device_names
     echo
     echo -n "device> "
-    read device 
+    read device
     case "$device" in
         pc|i386|pi2|dragon|bbb)
             ;;
@@ -112,7 +112,7 @@ kernel_hash=
 kernel_url=
 os_hash=
 os_url=
-udf_hash=3d29987ba68844d48a45dac1a5371b5ba89f9c261762752ce5dd159ad6fd15f525ec70bae10afcff0265015065a0dfc90325b0e590047e0e4e742c0657ea6456
+udf_hash=3778c009404ed09bb4bc2518d756a1e9c2f776cb2e161e67fd0e32f80d4cbeae1bdfd7f294a90c575311dfba18f7504262b41ae2b49c034617b8a6b2e1db30c4
 udf_url=http://people.canonical.com/~mvo/all-snaps/ubuntu-device-flash
 case $device in
     pc)
