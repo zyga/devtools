@@ -21,11 +21,12 @@ show_help() {
     echo "    --aarch64   Cross-compile for 64bit ARM (Aarch64)"
     echo
     echo "Commands:"
-    echo "    snap        Compile and copy 'snap'"
-    echo "    snappy      Compile and copy 'snappy'"
-    echo "    snapd       Compile and copy 'snapd'"
-    echo "    setup       Stop 'snapd' running on the machine"
-    echo "    run-snapd   Run copied 'snapd' (blocking)"
+    echo "    snap              Compile and copy 'snap'"
+    echo "    snappy            Compile and copy 'snappy'"
+    echo "    snapd             Compile and copy 'snapd'"
+    echo "    setup             Stop 'snapd' running on the machine"
+    echo "    run-snapd         Run copied 'snapd' (blocking)"
+    echo "    run-snapd-staging Run copied 'snapd' (blocking) against staging infrastructure"
     echo
     echo "NOTE: Typical workflow looks like this:"
     echo "  console 1: use $EDITOR to hack on the code"
@@ -132,7 +133,12 @@ while [ "$1" != '' ]; do
             ;;
         run-snapd)
             echo "Running snapd (use sudo snap to talk to it)"
-            ssh "$SNAPPY_HOST" sudo /lib/systemd/systemd-activate -l /run/snapd.socket ./snapd
+            ssh "$SNAPPY_HOST" sudo -H /lib/systemd/systemd-activate -l /run/snapd.socket ./snapd
+            shift
+            ;;
+        run-snapd-staging)
+            echo "Running snapd against staging server (use sudo snap to talk to it)"
+            ssh "$SNAPPY_HOST" sudo -H /lib/systemd/systemd-activate --setenv=SNAPPY_USE_STAGING_MYAPPS=1 --setenv=SNAPPY_USE_STAGING_CPI=1 --setenv=SNAPPY_USE_STAGING_SAS=1 -l /run/snapd.socket ./snapd
             shift
             ;;
         *)
