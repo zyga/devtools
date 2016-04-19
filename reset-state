@@ -50,6 +50,7 @@ echo
 set -x
 rm -vf /etc/systemd/system/snap-*.mount
 rm -vf /etc/systemd/system/snap-*.service
+rm -vf /etc/systemd/system/multi-user.target.wants/snap-*.mount
 set +x
 
 echo
