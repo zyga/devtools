@@ -57,7 +57,7 @@ echo
 echo "Removing generated executable wrappers..."
 echo
 set -x
-rm -vf /snap/*
+rm -vrf /snap/*
 set +x
 
 echo
