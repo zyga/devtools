@@ -1,0 +1,66 @@
+#!/bin/sh
+if [ "$(id -u)" != 0 ]; then
+    echo "This script needs to be run as root"
+    exit 1
+fi
+
+echo "This script is will permanently destroy and reset all state in snapd"
+echo "You will loose all of your installed snaps"
+echo
+echo "Type: DESTROY to remove all of your snap state"
+echo
+read consent
+
+if [ "$consent" != "DESTROY" ]; then 
+    echo "No consent, aborting"
+    exit 0
+fi
+echo
+echo "ABOUT TO DESTROY ALL OF STATE OF SNAPD"
+echo
+echo "Interrupt the script in 10 seconds to abort"
+sleep 10 || exit
+echo
+echo "DESTROYING ALL STATE OF SNAPD"
+
+echo
+echo "Stoping snapd..."
+echo
+set -x
+systemctl stop snapd
+set +x
+
+echo
+echo "Unmounting all snaps..."
+echo
+set -x
+umount /var/lib/snapd/snaps/*.snap
+set +x
+
+echo
+echo "Removing all support files and state..."
+echo
+set -x
+rm -rvf /var/lib/snapd/*
+set +x
+
+echo
+echo "Removing generated systemd units..."
+echo
+set -x
+rm -vf /etc/systemd/system/snap-*.mount
+rm -vf /etc/systemd/system/snap-*.service
+set +x
+
+echo
+echo "Removing generated executable wrappers..."
+echo
+set -x
+rm -vf /snap/*
+set +x
+
+echo
+echo "Starting snapd"
+set -x
+systemctl start snapd
+set +x
