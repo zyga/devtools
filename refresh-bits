@@ -1,6 +1,7 @@
 #!/bin/sh
 export GOARCH=amd64
 SNAPPY_HOST=snappy-vm
+CMD_PREFIX=devtools.
 
 show_help() {
     echo "Usage: refresh-bits [OPTIONS] COMMAND..."
@@ -107,7 +108,7 @@ while [ "$1" != '' ]; do
             echo "Building $1"
             go build -o "$1.$GOARCH" "github.com/ubuntu-core/snappy/cmd/$1" || exit 1
             echo "Copying $1 to target machine"
-            scp "$1.$GOARCH" "$SNAPPY_HOST:$1" || exit 1
+            scp "$1.$GOARCH" "$SNAPPY_HOST:${CMD_PREFIX}$1" || exit 1
             shift
             ;;
         snapd)
@@ -116,7 +117,7 @@ while [ "$1" != '' ]; do
             echo "Killing snapd on the target machine"
             ssh "$SNAPPY_HOST" sudo pkill -9 snapd || :
             echo "Copying $1 to target machine"
-            scp "$1.$GOARCH" "$SNAPPY_HOST:$1" || exit 1
+            scp "$1.$GOARCH" "$SNAPPY_HOST:${CMD_PREFIX}$1" || exit 1
             shift
             ;;
         setup)
@@ -133,12 +134,12 @@ while [ "$1" != '' ]; do
             ;;
         run-snapd)
             echo "Running snapd (use sudo snap to talk to it)"
-            ssh "$SNAPPY_HOST" sudo -H /lib/systemd/systemd-activate -l /run/snapd.socket ./snapd
+            ssh "$SNAPPY_HOST" sudo -H /lib/systemd/systemd-activate -l /run/snapd.socket ./${CMD_PREFIX}snapd
             shift
             ;;
         run-snapd-staging)
             echo "Running snapd against staging server (use sudo snap to talk to it)"
-            ssh "$SNAPPY_HOST" sudo -H /lib/systemd/systemd-activate --setenv=SNAPPY_USE_STAGING_MYAPPS=1 --setenv=SNAPPY_USE_STAGING_CPI=1 --setenv=SNAPPY_USE_STAGING_SAS=1 -l /run/snapd.socket ./snapd
+            ssh "$SNAPPY_HOST" sudo -H /lib/systemd/systemd-activate --setenv=SNAPPY_USE_STAGING_MYAPPS=1 --setenv=SNAPPY_USE_STAGING_CPI=1 --setenv=SNAPPY_USE_STAGING_SAS=1 -l /run/snapd.socket ./${CMD_PREFIX}snapd
             shift
             ;;
         *)
