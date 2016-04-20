@@ -4,7 +4,7 @@ if [ "$(id -u)" != 0 ]; then
     exit 1
 fi
 
-echo "This script is will permanently destroy and reset all state in snapd"
+echo "This script will permanently destroy and reset all state in snapd"
 echo "You will loose all of your installed snaps"
 echo
 echo "Type: DESTROY to remove all of your snap state"
