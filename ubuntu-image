@@ -203,6 +203,13 @@ test -z "$os" && echo "BUG: no OS snap for device: $device" && exit 2
 test -z "$kernel" && echo "BUG: no kernel snap for device: $device" && exit 2
 test -z "$gadget" && echo "BUG: no gadget snap for device: $device" && exit 2
 
+# Check if required tools are present
+
+test -z $(which kpartx) && (
+echo "Installing required dependency: kpartx"
+sudo apt-get install kpartx --yes
+)
+
 # Run ubuntu device flash
 
 echo "Building image..."
