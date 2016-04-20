@@ -209,12 +209,12 @@ echo "Building image..."
 
 case "$image_kind" in
     vanilla)
-        exec sudo "$udf" core rolling \
+        exec sudo "$udf" core 16 \
             --channel "$channel" --kernel "$kernel" --os "$os" --gadget "$gadget" \
             -o "$device.img"
         ;;
     devel)
-        exec sudo "$udf" core rolling \
+        exec sudo "$udf" core 16 \
             --channel "$channel" --kernel "$kernel" --os "$os" --gadget "$gadget" \
             --developer-mode -o "${device}-devel.img"
         ;;
