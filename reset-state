@@ -23,12 +23,17 @@ sleep 10 || exit
 echo
 echo "DESTROYING ALL STATE OF SNAPD"
 
-echo
-echo "Stoping snapd..."
-echo
-set -x
-systemctl stop snapd
-set +x
+if systemctl is-active --quiet snapd.service snapd.socket; then
+    snapd_was_active=yes
+    echo
+    echo "Stoping snapd..."
+    echo
+    set -x
+    systemctl stop snapd.socket snapd.service
+    set +x
+else
+    echo "Skipping stopping snapd as systemctl reports it's inactive."
+fi
 
 echo
 echo "Unmounting all snaps..."
@@ -60,8 +65,10 @@ set -x
 rm -vrf /snap/*
 set +x
 
-echo
-echo "Starting snapd"
-set -x
-systemctl start snapd
-set +x
+if [ "$snapd_was_active" = "yes" ]; then
+    echo
+    echo "Starting snapd"
+    set -x
+    systemctl start snapd.socket
+    set +x
+fi
