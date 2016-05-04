@@ -55,6 +55,15 @@ while [ -n "$1" ]; do
     esac
 done
 
+# Add a notice about 16 series being under development
+echo "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+echo "X NOTE: Ubuntu 16 series is still under development!                  X"
+echo "X The exact layout of the kernel and gadget snaps will likely change. X"
+echo "X You may have to re-flash your device to receive further upgrades.   X"
+echo "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+
+sleep 5s
+
 # Interactively ask about the device if necessary.
 
 while [ -z "$device" ]; do
