@@ -1,11 +1,15 @@
 #!/bin/sh
 
 version="0.2"
-
+visual=no
 # Handle command line arguments
 
 while [ -n "$1" ]; do
     case "$1" in 
+        --visual)
+            visual=yes
+            shift
+            ;;
         --help|-h)
             echo "Usage: run-devel-vm [device name]"
             exit 0
@@ -65,13 +69,23 @@ if [ ! -e $device-devel.img ]; then
     sudo ./ubuntu-image --developer-mode $device || exit $?
 fi
 
-# Run qemu
+# Find out which qemu executable to use
 
 case $device in
     pc)
-        exec sudo qemu-system-x86_64 -m 512 -nographic -snapshot -redir tcp:8022::22 $device-devel.img
+        qemu="qemu-system-x86_64"
         ;;
     i386)
-        exec sudo qemu-system-i386 -m 512 -nographic -snapshot -redir tcp:8022::22 $device-devel.img
+        qemu="qemu-system-i386"
         ;;
 esac
+
+qemu_options="-m 512 -snapshot -redir tcp:8022::22"
+case $visual in
+    no)
+        qemu_options="$qemu_options -nographic"
+        ;;
+esac
+
+# Run qemu
+exec sudo "$qemu" $qemu_options "$device-devel.img"
