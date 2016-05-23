@@ -24,8 +24,6 @@ if grep -qa container=lxc /proc/1/environ; then
   exit
 fi
 
-exit
-
 # Handle command line arguments
 
 while [ -n "$1" ]; do
