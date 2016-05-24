@@ -1,38 +1,77 @@
 #!/bin/sh
-export GOARCH=amd64
-SNAPPY_HOST=snappy-vm
+#: Name of the architecture to compile for, in uname -m style.
+#: This is mapped to various GOARCH values later in the script.
+#: If this is empty then architecture is probed, taking devtools_host into
+#: account.
+devtools_arch=
+
+#: Hostname to connect to if the target device is not local.
+#: This can be one of the snappy-* special-cased values (there's an expectation
+#: that appropriate pre-made ssh config is available) or any valid hostname.
+devtools_host=
+
+#: SSH options to use.
+#: Those option are optimized for non-interactive key authentication.
+devtools_ssh_opts="-o User=ubuntu"
+devtools_ssh_opts="$devtools_ssh_opts -o BatchMode=yes"
+devtools_ssh_opts="$devtools_ssh_opts -o UserKnownHostsFile=/dev/null"
+devtools_ssh_opts="$devtools_ssh_opts -o CheckHostIP=no"
+devtools_ssh_opts="$devtools_ssh_opts -o StrictHostKeyChecking=no"
+devtools_ssh_opts="$devtools_ssh_opts -o LogLevel=ERROR"
+devtools_ssh_opts="$devtools_ssh_opts -o IdentityFile=~/.ssh/id_rsa"
+
+#: Boot and use a local virtual machine
+#: no:        no, ssh to a remote box or use this machine right here
+#: yes:       yes, boot a devtools_vm with run-devel-devtools_vm
+devtools_vm=no
+
+#: List of commands to execute (separated by spaces).
+#: The commands are one of:
+#: - snap     build snap (command line user interface)
+#: - snapd    build snapd (snap daemon)
+#: ...
+devtools_cmds=""
+
+#: Option passed to systemd-activate.
+#: This is only used to pass environment required to use the staging server.
+devtools_systemd_activate_opts=""
+
+#: Prefix of all the locally compiled executables.
+#: This is done so that snap/snapd don't clash with any directories.
+#: It also helps to identify devtools if people report odd bugs.
 CMD_PREFIX=devtools.
+
+#: Just for inspection
+devtools_version=2.0
 
 show_help() {
     echo "Usage: refresh-bits [OPTIONS] COMMAND..."
     echo
-    echo "NOTE: The following options require particular SSH config (see README.md)"
+    echo "By default everything is done locally."
+    echo "You can use --vm or --host to change that."
     echo
-    echo "Use a local virtual machine:"
-    echo "    --pc:       Modern Intel/AMD Computer (64 bit)"
-    echo "    --i386:     Legacy Intel/AMD Computer (32 bit)"
-    echo "Use a remote physical machine:"
-    echo "    --pi2:      Raspberry Pi 2"
-    echo "    --dragon:   410c DragonBoard"
-    echo "    --bbb:      Baglebone Black"
+    echo "Spin up an ephemeral virtual machine:"
+    echo "    --vm=pc       Modern Intel/AMD Computer (64 bit)"
+    echo "    --vm=i386     Legacy Intel/AMD Computer (32 bit)"
     echo
-    echo "Use a custom remote machine:"
-    echo "    --host HOST Connect to the given host"
-    echo "    --arm       Cross-compile for modern 32bit ARM (ARMv7)"
-    echo "    --aarch64   Cross-compile for 64bit ARM (Aarch64)"
+    echo "Use a remote machine:"
+    echo "    --host=HOST   Connect to the given host"
     echo
     echo "Commands:"
-    echo "    snap              Compile and copy 'snap'"
-    echo "    snappy            Compile and copy 'snappy'"
-    echo "    snapd             Compile and copy 'snapd'"
-    echo "    setup             Stop 'snapd' running on the machine"
-    echo "    run-snapd         Run copied 'snapd' (blocking)"
-    echo "    run-snapd-staging Run copied 'snapd' (blocking) against staging infrastructure"
+    echo "    snap          Compile and copy 'snap'"
+    echo "    snapd         Compile and copy 'snapd'"
+    echo "    setup         Stop 'snapd' running on the machine"
+    echo "    restore       Restore regular snapd running on the machine"
+    echo "    inspect       Check the status of snapd on the target machine"
+    echo "    use-staging   Use staging server when talking to Ubuntu store"
+    echo "    run-snapd     Run copied 'snapd' (blocking)"
+    echo
+    echo "NOTE: The following options require particular SSH config (see README.md)"
     echo
     echo "NOTE: Typical workflow looks like this:"
     echo "  console 1: use $EDITOR to hack on the code"
     echo "  console 2: run unit tests in a loop with entr(1)"
-    echo "  console 3: run ./refresh-bits snap snapd setup run-snapd"
+    echo "  console 3: run ./refresh-bits snap snapd setup run-snapd restore"
     echo "  console 4: use ssh to login to the target machine"
     echo "  console 5: (optionally) run run-devel-vm"
     echo
@@ -42,104 +81,48 @@ show_help() {
     echo "Good luck, happy hacking!"
 }
 
+# Quickly show help if invoked without any arguments.
 if [ "$1" = "" ]; then
     show_help
     exit
 fi
 
+
+# Parse commands and store everything. No actions are taken yet.
 while [ "$1" != '' ]; do
     case "$1" in
         --help)
             show_help
-            shift
             exit
             ;;
-        --pc)
-            SNAPPY_HOST=snappy-vm
-            export GOARCH=amd64
+        --version)
+            echo "devtools refresh-bits version $devtools_version"
+            exit
+            ;;
+        --vm=*)
+            case "$(echo "$1" | cut -d= -f 2)" in
+                pc)
+                    devtools_arch=x86_64
+                    ;;
+                i386)
+                    devtools_arch=i386
+                    ;;
+                *)
+                    echo "Unsupported virtual machine target"
+                    exit 1
+                    ;;
+            esac
+            devtools_vm=yes
+            devtools_host=localhost
+            devtools_ssh_opts="$devtools_ssh_opts -o Port=8022"
             shift
             ;;
-        --i386)
-            SNAPPY_HOST=snappy-vm
-            export GOARCH=i386
+        --host=*)
+            devtools_host="$(echo "$1" | cut -d = -f 2)"
             shift
             ;;
-        --pi2)
-            SNAPPY_HOST=snappy-pi2
-            export GOARCH=arm
-            export GOARM=7
-            export CGO_ENABLED=1
-            export CC=arm-linux-gnueabihf-gcc
-            shift
-            ;;
-        --dragon)
-            SNAPPY_HOST=snappy-dragon
-            export GOARCH=arm64
-            export CGO_ENABLED=1
-            export CC=aarch64-linux-gnu-gcc
-            shift
-            ;;
-        --bbb)
-            SNAPPY_HOST=snappy-bbb
-            export GOARCH=arm
-            export GOARM=7
-            export CGO_ENABLED=1
-            export CC=arm-linux-gnueabihf-gcc
-            shift
-            ;;
-        --host)
-            SNAPPY_HOST="$2"
-            shift 2
-            ;;
-        --arm|--armv7)
-            shift
-            export GOARCH=arm
-            export GOARM=7
-            export CGO_ENABLED=1
-            export CC=arm-linux-gnueabihf-gcc
-            ;;
-        --aarch64|--arm64)
-            export GOARCH=arm64
-            export CGO_ENABLED=1
-            export CC=aarch64-linux-gnu-gcc
-            shift
-            ;;
-        snap|snappy)
-            echo "Building $1"
-            go build -o "$1.$GOARCH" "github.com/ubuntu-core/snappy/cmd/$1" || exit 1
-            echo "Copying $1 to target machine"
-            scp "$1.$GOARCH" "$SNAPPY_HOST:${CMD_PREFIX}$1" || exit 1
-            shift
-            ;;
-        snapd)
-            echo "Building $1"
-            go build -o "$1.$GOARCH" "github.com/ubuntu-core/snappy/cmd/$1" || exit 1
-            echo "Killing snapd on the target machine"
-            ssh "$SNAPPY_HOST" sudo pkill -9 snapd || :
-            echo "Copying $1 to target machine"
-            scp "$1.$GOARCH" "$SNAPPY_HOST:${CMD_PREFIX}$1" || exit 1
-            shift
-            ;;
-        setup)
-            echo "Disabling normal snap daemon..."
-            ssh "$SNAPPY_HOST" sudo systemctl disable snapd.socket
-            ssh "$SNAPPY_HOST" sudo systemctl disable snapd.service
-            ssh "$SNAPPY_HOST" sudo systemctl stop snapd.socket
-            ssh "$SNAPPY_HOST" sudo systemctl stop snapd.service
-            echo "Killing any locally-started snapd"
-            ssh "$SNAPPY_HOST" sudo pkill -9 snapd || :
-            echo "Inspecting VM state"
-            ssh "$SNAPPY_HOST" systemctl status snapd.socket snapd.service || :
-            shift
-            ;;
-        run-snapd)
-            echo "Running snapd (use sudo snap to talk to it)"
-            ssh "$SNAPPY_HOST" sudo -H /lib/systemd/systemd-activate -l /run/snapd.socket ./${CMD_PREFIX}snapd
-            shift
-            ;;
-        run-snapd-staging)
-            echo "Running snapd against staging server (use sudo snap to talk to it)"
-            ssh "$SNAPPY_HOST" sudo -H /lib/systemd/systemd-activate --setenv=SNAPPY_USE_STAGING_MYAPPS=1 --setenv=SNAPPY_USE_STAGING_CPI=1 --setenv=SNAPPY_USE_STAGING_SAS=1 -l /run/snapd.socket ./${CMD_PREFIX}snapd
+        snap|snapd|setup|restore|inspect|run-snapd|use-staging)
+            devtools_cmds="$devtools_cmds $1"
             shift
             ;;
         *)
@@ -148,3 +131,177 @@ while [ "$1" != '' ]; do
             ;;
     esac
 done
+
+check_connectivity() {
+    # If we are operating on a remote machine check if we can connect
+    if [ -n "$devtools_host" ]; then
+        echo "Checking SSH connectivity..."
+        ssh $devtools_ssh_opts "$devtools_host" true
+        if [ "$?" -ne 0 ]; then
+            echo "Cannot connect to the selected remote device: $devtools_host"
+            echo
+            if [ "$devtools_vm" = yes ]; then
+                echo "You need to start the VM manually with:"
+                echo "   ./run-devel-vm"
+                echo "You will also have to ensure appropriate SSH config is in place"
+            else
+                echo "Please ensure that the machine is up and running and that your credentials are okay."
+            fi
+            exit 1
+        fi
+    fi
+}
+
+probe_architecture() {
+    # If the architecture is not know then probe it now.
+    if [ -z "$devtools_arch" ]; then
+        if [ -n "$devtools_host" ]; then
+            echo "Checking architecture of the target device..."
+            devtools_arch="$(ssh $devtools_ssh_opts "$devtools_host" uname -m)"
+        else
+            devtools_arch="$(uname -m)"
+        fi
+    fi
+}
+
+
+setup_goarch() {
+    # Do simple sanity checking on the selected architecture
+    case "$devtools_arch" in
+        x86_64)
+            export GOARCH=amd64
+            ;;
+        i386)
+            export GOARCH=i386
+            ;;
+        armv6l)
+            echo "Unsupported architecture: $devtools_arch"
+            echo
+            echo "This architecture is not supported by snapd or by the snappy ecosystem."
+            echo "Please use a modern (ARMv7 or newer) device such as the Raspberry PI 2."
+            exit 1
+            ;;
+        armv7l)
+            export GOARCH=arm
+            export GOARM=7
+            export CGO_ENABLED=1
+            export CC=arm-linux-gnueabihf-gcc
+            ;;
+        aarch64)
+            export GOARCH=arm64
+            export CGO_ENABLED=1
+            export CC=aarch64-linux-gnu-gcc
+            ;;
+        *)
+            echo "Unsupported architecture ($devtools_arch). Please patch this script"
+            exit 1
+            ;;
+    esac
+}
+
+
+show_summary() {
+    # Print a quick summary to let the developer know what's going on
+    echo "== Summary =="
+    case "$devtools_arch" in
+        *)
+            if [ "$devtools_arch" != "$(uname -m)" ]; then
+                echo " - cross-compile binaries for $devtools_arch"
+            else
+                echo " - compile binaries for $devtools_arch"
+            fi
+            ;;
+    esac
+    case "$devtools_vm" in
+        yes)
+            echo " - use an ephemeral virtual machine (using run-devel-vm)"
+            ;;
+        no)
+            case "$devtools_host" in
+                '')
+                    echo " - run everything locally"
+                    ;;
+                *)
+                    echo " - ssh to '$devtools_host' and run remotely"
+                    ;;
+            esac
+            ;;
+    esac
+}
+
+
+run_on_target() {
+    if [ -n "$devtools_host" ]; then
+        ssh $devtools_ssh_opts "$devtools_host" "$@"
+    else
+        "$@"
+    fi
+}
+
+
+run_commands() {
+    echo "== Executing Commands =="
+    while [ -n "$1" ]; do
+        case "$1" in
+            snap|snapd)
+                echo " - building $1"
+                go build -o "$1.$GOARCH" "github.com/snapcore/snapd/cmd/$1" || exit 1
+                if [ -n "$devtools_host" ]; then
+                    echo "Copying $1 to target device..."
+                    scp $devtools_ssh_opts "$1.$GOARCH" "$devtools_host:${CMD_PREFIX}$1" || exit 1
+                fi
+                shift
+                ;;
+            setup)
+                echo " - stopping existing snapd..."
+                run_on_target sudo systemctl stop snapd.socket
+                run_on_target sudo systemctl stop snapd.service
+                run_on_target sudo systemctl disable snapd.socket
+                run_on_target sudo systemctl disable snapd.service
+                shift
+                ;;
+            inspect)
+                echo " - inspecting state (visually)"
+                run_on_target systemctl status --lines=0 snapd.socket || :
+                run_on_target systemctl status --lines=0 snapd.service || :
+                shift
+                ;;
+            restore)
+                echo " - restarting regular snapd..."
+                run_on_target sudo systemctl enable snapd.service
+                run_on_target sudo systemctl enable snapd.socket
+                run_on_target sudo systemctl start snapd.socket
+                run_on_target sudo systemctl start snapd.service
+                shift
+                ;;
+            use-staging)
+                echo " - switched to staging server"
+                devtools_systemd_activate_opts="--setenv=SNAPPY_USE_STAGING_MYAPPS=1 --setenv=SNAPPY_USE_STAGING_CPI=1 --setenv=SNAPPY_USE_STAGING_SAS=1"
+                shift
+                ;;
+            run-snapd)
+                echo " - running snapd"
+                echo "   NOTE: this is a blocking operation."
+                echo "   Use ctrl-C to stop snapd and process remaining commands"
+                echo
+                trap 'printf "\n - interrupted!\n"' INT
+                if [ -n "$devtools_host" ]; then
+                    echo "   Use 'sudo ./${CMD_PREFIX}snap' on anther console to talk to this snapd"
+                    run_on_target sudo -H /lib/systemd/systemd-activate $devtools_systemd_activate_opts -l /run/snapd.socket ./${CMD_PREFIX}snapd
+                else
+                    echo "   Use 'sudo ./snap.$GOARCH' on anther console to talk to this snapd"
+                    sudo -H /lib/systemd/systemd-activate $devtools_systemd_activate_opts -l /run/snapd.socket ./snapd.${GOARCH}
+                fi
+                trap - INT
+                shift
+                ;;
+        esac
+    done
+    echo "== All commands processed =="
+}
+
+check_connectivity
+probe_architecture
+setup_goarch
+show_summary
+run_commands $devtools_cmds
