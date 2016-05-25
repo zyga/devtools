@@ -35,16 +35,20 @@ if [ ! -f "xenial-base-$arch.tar.gz" ]; then
     tar -zxf "xenial-base-$arch.tar.gz" -C xenial
 fi
 
+cleanup() {
+umount xenial/proc
+umount xenial/dev
+umount xenial/sys
+umount xenial/home
+umount xenial/dev/pts
+}
+
+trap "cleanup" EXIT
 mount --bind /proc xenial/proc
-trap "umount xenial/proc" EXIT
 mount --bind /dev xenial/dev
-trap "umount xenial/dev" EXIT
 mount --bind /sys xenial/sys
-trap "umount xenial/sys" EXIT
 mount --bind /home xenial/home
-trap "umount xenial/home" EXIT
 mount -t devpts none xenial/dev/pts
-trap "umount xenial/dev/pts" EXIT
 
 cp /etc/resolv.conf xenial/etc
 
