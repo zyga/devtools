@@ -36,11 +36,11 @@ if [ ! -f "xenial-base-$arch.tar.gz" ]; then
 fi
 
 cleanup() {
-umount xenial/proc
-umount xenial/dev
-umount xenial/sys
-umount xenial/home
-umount xenial/dev/pts
+    umount -l xenial/proc
+    umount -l xenial/dev
+    umount -l xenial/sys
+    umount -l xenial/home
+    umount -l xenial/dev/pts
 }
 
 trap "cleanup" EXIT
