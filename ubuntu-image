@@ -13,6 +13,17 @@ show_device_names() {
     echo " bbb:     BeagleBone Black"
 }
 
+# need sudo to check if we're in an LXC container
+if [ $(id -u) -ne "0" ]; then
+  echo "Please run me with sudo"
+  exit
+fi
+
+if grep -qa container=lxc /proc/1/environ; then
+  echo "You're in a container, refusing to run."
+  exit
+fi
+
 # Handle command line arguments
 
 while [ -n "$1" ]; do
