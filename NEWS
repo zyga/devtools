@@ -1,3 +1,7 @@
+refresh-bits 2.0:
+ - all new command line interface
+ - much better usability and simplicity
+ - support for classic, you can hack on your own machine with ease
 ubuntu-image 0.11:
  - Use the new 16 series that matches the 16.04 desktop release
  - Automatically install kpartx if missing
