@@ -171,7 +171,7 @@ setup_goarch() {
         x86_64)
             export GOARCH=amd64
             ;;
-        i386)
+        i686)
             export GOARCH=i386
             ;;
         armv6l)
