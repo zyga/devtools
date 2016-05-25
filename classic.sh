@@ -24,23 +24,23 @@ case "$(uname -m)" in
         ;;
 esac
 
-if [ ! -d xenial ]; then
-    mkdir xenial
-fi
-
 if [ ! -f "xenial-base-$arch.tar.gz" ]; then
     echo "Downloading xenial chroot for $arch..."
     python3 -c "from urllib.request import urlretrieve; urlretrieve('http://cdimage.ubuntu.com/ubuntu-base/xenial/daily/current/xenial-base-$arch.tar.gz', 'xenial-base-$arch.tar.gz')"
+fi
+
+if [ ! -d xenial ]; then
+    mkdir xenial
     echo "Uncompressing xenial chroot..."
     tar -zxf "xenial-base-$arch.tar.gz" -C xenial
 fi
 
 cleanup() {
+    umount -l xenial/home
+    umount -l xenial/sys
     umount -l xenial/dev/pts
     umount -l xenial/dev
     umount -l xenial/proc
-    umount -l xenial/sys
-    umount -l xenial/home
 }
 
 trap "cleanup" EXIT
