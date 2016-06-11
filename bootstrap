@@ -34,9 +34,9 @@ devtools_profile_changed=no
 
 detect_os() {
     if [ -e /etc/os-release ]; then
-        devtools_ID=$( . /etc/os-release && echo ${ID:-linux} )
-        devtools_VERSION_ID=$( . /etc/os-release && echo ${VERSION_ID} )
-        devtools_PRETTY_NAME=$( . /etc/os-release && echo ${PRETTY_NAME} )
+        devtools_ID="$( . /etc/os-release && echo "${ID:-linux}" )"
+        devtools_VERSION_ID="$( . /etc/os-release && echo "${VERSION_ID}" )"
+        devtools_PRETTY_NAME="$( . /etc/os-release && echo "${PRETTY_NAME}" )"
     else
         echo "Unable to detect operating system type"
         echo "Please read this script and improve it!"
@@ -55,14 +55,14 @@ determine_requirements() {
                     devtools_host_pkg_list="git bzr automake autoconf indent make gcc squashfs-tools wget"
                     ;;
                 *)
-                    echo "Unsupported RHEL version: $VERSION_ID"
+                    echo "Unsupported RHEL version: $devtools_VERSION_ID"
                     echo "Please read this script and improve it!"
                     exit 1
                     ;;
             esac
             ;;
         *)
-            echo "Unsupported distribution: $ID"
+            echo "Unsupported distribution: $devtools_ID"
             echo "Please read this script and improve it!"
             exit 1
             ;;
