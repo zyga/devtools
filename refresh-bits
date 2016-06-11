@@ -132,6 +132,21 @@ while [ "$1" != '' ]; do
     esac
 done
 
+# Find systemd-activate
+for devtools_systemd_activate in /lib/systemd/systemd-activate /usr/lib/systemd/systemd-activate; do
+    if [ -e "$devtools_systemd_activate" ]; then
+        break
+    fi
+done
+if [ ! -e "$devtools_systemd_activate" ]; then
+    echo "NOTE: This systemd doesn't seem to have systemd installed."
+    echo "Currently snapd requires systemd (though we are working to remove"
+    echo "this requirement) and devtools is no different."
+    echo "Please work on supporting your init system by sending pull requests"
+    echo "or opening isssues on github.com/zyga/devtools"
+    exit 1
+fi
+
 check_connectivity() {
     # If we are operating on a remote machine check if we can connect
     if [ -n "$devtools_host" ]; then
@@ -287,10 +302,10 @@ run_commands() {
                 trap 'printf "\n - interrupted!\n"' INT
                 if [ -n "$devtools_host" ]; then
                     echo "   Use 'sudo ./${CMD_PREFIX}snap' on anther console to talk to this snapd"
-                    run_on_target sudo -H /lib/systemd/systemd-activate $devtools_systemd_activate_opts -l /run/snapd.socket ./${CMD_PREFIX}snapd
+                    run_on_target sudo -H $devtools_systemd_activate $devtools_systemd_activate_opts -l /run/snapd.socket ./${CMD_PREFIX}snapd
                 else
                     echo "   Use 'sudo ./snap.$GOARCH' on anther console to talk to this snapd"
-                    sudo -H /lib/systemd/systemd-activate $devtools_systemd_activate_opts -l /run/snapd.socket ./snapd.${GOARCH}
+                    sudo -H $devtools_systemd_activate $devtools_systemd_activate_opts -l /run/snapd.socket ./snapd.${GOARCH}
                 fi
                 trap - INT
                 shift
