@@ -1,0 +1,230 @@
+#!/bin/sh
+# This is the bootstrap script. The universal tool to setup any host for
+# building snapd. This script is never complete. If you are reading it because
+# it failed on your distribution then I encourage you to patch it and share
+# your patch with the upstream developers.
+
+#: Identifier of the operating system as described by os-release(5)
+devtools_ID=
+
+#: Version of the operating system as described by os-release(5)
+devtools_VERSION_ID=
+
+#: Pretty name of the operating system as described by os-release(5)
+devtools_PRETTY_NAME=
+
+#: Default value of GOPATH that is set if there is no other value yet
+devtools_GOPATH='~/go'
+
+#: Name of the native packaging system (wrapper) of the host OS.
+#: Supported values are: apt yum dnf zypper pacman
+devtools_host_pkg_tool=
+
+#: List of package names that need to be installed with the native packaging
+# system of the host OS.
+devtools_host_pkg_list=
+
+#: Flag indicating if pre-built go release should be downloaded and installed.
+#: Set to "yes" to enable.
+devtools_prebuilt_go=no
+
+#: Flag indicating if ~/.profile was modified.
+devtools_profile_changed=no
+
+
+detect_os() {
+    if [ -e /etc/os-release ]; then
+        devtools_ID=$( . /etc/os-release && echo ${ID:-linux} )
+        devtools_VERSION_ID=$( . /etc/os-release && echo ${VERSION_ID} )
+        devtools_PRETTY_NAME=$( . /etc/os-release && echo ${PRETTY_NAME} )
+    else
+        echo "Unable to detect operating system type"
+        echo "Please read this script and improve it!"
+        exit 1
+    fi
+}
+
+
+determine_requirements() {
+    case "$devtools_ID" in
+        rhel)
+            case "$devtools_VERSION_ID" in
+                7.2)
+                    devtools_prebuilt_go=yes
+                    devtools_host_pkg_tool=yum
+                    devtools_host_pkg_list="git bzr automake autoconf indent make gcc squashfs-tools wget"
+                    ;;
+                *)
+                    echo "Unsupported RHEL version: $VERSION_ID"
+                    echo "Please read this script and improve it!"
+                    exit 1
+                    ;;
+            esac
+            ;;
+        *)
+            echo "Unsupported distribution: $ID"
+            echo "Please read this script and improve it!"
+            exit 1
+            ;;
+    esac
+}
+
+
+install_native_packages() {
+    # Check if there is anything to do first
+    devtools_install_needed=no
+    case "$devtools_host_pkg_tool" in
+        yum)
+            for devtools_host_pkg in $devtools_host_pkg_list; do
+                if ! rpm -q --quiet "$devtools_host_pkg"; then
+                    devtools_install_needed=yes
+                    break
+                fi
+            done
+            ;;
+        *)
+            echo "Unsupported native package manager: $devtools_host_pkg_list"
+            exit 1
+    esac
+    if [ "$devtools_install_needed" = no ]; then
+        # If there is nothing to do, don't try to install packages in vein
+        return
+    fi
+    case "$devtools_host_pkg_tool" in
+        yum)
+            devtools_host_pkg_install_cmd="yum install $devtools_host_pkg_list"
+            ;;
+        *)
+            echo "Unsupported native package manager: $devtools_host_pkg_list"
+            exit 1
+    esac
+    # Really install packages now
+    echo "Installing required packages using native packaging system..."
+    set -x
+    sudo $devtools_host_pkg_install_cmd || exit 1
+    set +x
+}
+
+
+install_prebuilt_go() {
+    if [ "$devtools_prebuilt_go" != yes ]; then
+        # Don't download and install pre-built go release unless required
+        return
+    fi
+    # Which release to download?
+    devtools_arch="$(uname -m)"
+    case "$devtools_arch" in
+        i386|i686)
+            devtools_go_dist=go1.6.2.linux-386.tar.gz
+            devtools_go_dist_sha512=36f31debe7797999ba023230a78668f1a4893b24dbf2af3f2ff361dec3b84557abeb9bdd6595b65ae852c3b353fccecc213a68da26da8a11742338677ca5555f
+            ;;
+        x86_64)
+            devtools_go_dist=go1.6.2.linux-amd64.tar.gz
+            devtools_go_dist_sha512=6c3102f74df0cc4c533eb7ffc99c364c9d238067dfa8626aac4e684a6a0a0bb079afc3bb98db16bd44fdde529c4fe60554d6d30272ca4bb365926646de0c4d3d
+            ;;
+        *)
+            echo "Unsupported processor architecture: $devtools_arch"
+            echo "There is no pre-built release of go that can be used on your processor"
+            exit 1
+            ;;
+    esac
+    if [ ! -d /usr/local/go ]; then
+        # Download go...
+        if [ ! -f $devtools_go_dist ]; then
+            echo "Downloading pre-built go release..."
+            set -x
+            wget "https://storage.googleapis.com/golang/$devtools_go_dist" || exit 1
+            set +x
+        fi
+        # ... then check it...
+        if [ "$(sha512sum "$devtools_go_dist" | cut -d ' ' -f 1)" != "$devtools_go_dist_sha512" ]; then
+            echo "Downloaded pre-built go release doesn't match expected sha512 checksum"
+            echo "The file is: $devtools_go_dist"
+            echo "The expected checksum was: $devtools_go_dist_sha512"
+            echo
+            echo "If the file is corrupted then please remove it and re-run this script"
+            echo "If the problem persists please report this problem using:"
+            echo "https://github.com/zyga/devtools/issues/new"
+            exit 1
+        fi
+        # ... and install it to /usr/local
+        echo "Installing pre-built go release..."
+        set -x
+        sudo tar -C /usr/local -xzf "$devtools_go_dist" || exit 1
+        set +x
+    fi
+    # Add the new local installation to PATH
+    if echo "$PATH" | grep -q /usr/local/go/bin; then
+        # Don't modify $PATH unless required
+        return
+    fi
+    if [ -f ~/.profile ] && grep -q '^# devtools: path$' ~/.profile; then
+        # Don't add the same thing twice
+        return
+    fi
+    echo "Adding locally-installed go to PATH"
+    devtools_profile_changed=yes
+    cat >> ~/.profile << __SNIPPET__
+# Added by github.com/zyga/devtools (bootstrap.sh)
+# devtools: path
+export PATH="\$PATH:/usr/local/go/bin"
+__SNIPPET__
+}
+
+
+setup_gopath() {
+    if [ -n "$GOPATH" ]; then
+        # Don't clobber $GOPATH if the user already has one
+        return
+    fi
+    if [ -f ~/.profile ] && grep -E -q '^# devtools: gopath$' ~/.profile; then
+        # Don't add the same thing twice
+        return
+    fi
+    echo "Setting GOPATH to $devtools_GOPATH"
+    devtools_profile_changed=yes
+    cat >> ~/.profile << __SNIPPET__
+# Added by github.com/zyga/devtools (bootstrap.sh)
+# devtools: gopath
+export GOPATH=$devtools_GOPATH
+__SNIPPET__
+}
+
+
+notify_of_profile_changes() {
+    if [ "$devtools_profile_changed" = yes ]; then
+        echo "==========================================================="
+        echo "NOTE: This script has modified your shell profile but those"
+        echo "changes are not automatically applied to your running shell"
+        echo
+        echo "To be able to build snapd re-load your shell profile file"
+        echo "Using the following command:"
+        echo " . ~/.profile"
+    fi
+}
+
+
+show_summary() {
+    echo "==========================================================="
+    echo "Operating system:             $devtools_PRETTY_NAME"
+    echo "Native package manager:       $devtools_host_pkg_tool"
+    echo "List of required packages:    $devtools_host_pkg_list"
+    echo "Install pre-built go release: $devtools_prebuilt_go"
+    echo
+    echo "You should be good to go now :-)"
+    echo "Try running the refresh-bits script"
+    echo " $ refresh-bits snap snapd"
+    echo
+    echo "Good luck!"
+    echo
+}
+
+
+
+detect_os
+determine_requirements
+install_native_packages
+install_prebuilt_go
+setup_gopath
+notify_of_profile_changes
+show_summary
