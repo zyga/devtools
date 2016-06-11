@@ -61,6 +61,19 @@ determine_requirements() {
                     ;;
             esac
             ;;
+            opensuse)
+            case "$devtools_VERSION_ID" in
+                42.1)
+                    devtools_host_pkg_tool=zypper
+                    devtools_host_pkg_list="git bzr automake autoconf indent make gcc squashfs go"
+                    ;;
+                *)
+                    echo "Unsupported openSUSE version: $devtools_VERSION_ID"
+                    echo "Please read this script and improve it!"
+                    exit 1
+                    ;;
+            esac
+            ;;
         *)
             echo "Unsupported distribution: $devtools_ID"
             echo "Please read this script and improve it!"
@@ -74,7 +87,7 @@ install_native_packages() {
     # Check if there is anything to do first
     devtools_install_needed=no
     case "$devtools_host_pkg_tool" in
-        yum)
+        yum|zypper)
             for devtools_host_pkg in $devtools_host_pkg_list; do
                 if ! rpm -q --quiet "$devtools_host_pkg"; then
                     devtools_install_needed=yes
@@ -83,7 +96,7 @@ install_native_packages() {
             done
             ;;
         *)
-            echo "Unsupported native package manager: $devtools_host_pkg_list"
+            echo "Unsupported native package manager: $devtools_host_pkg_tool"
             exit 1
     esac
     if [ "$devtools_install_needed" = no ]; then
@@ -94,8 +107,11 @@ install_native_packages() {
         yum)
             devtools_host_pkg_install_cmd="yum install $devtools_host_pkg_list"
             ;;
+        zypper)
+            devtools_host_pkg_install_cmd="zypper install $devtools_host_pkg_list"
+            ;;
         *)
-            echo "Unsupported native package manager: $devtools_host_pkg_list"
+            echo "Unsupported native package manager: $devtools_host_pkg_tool"
             exit 1
     esac
     # Really install packages now
@@ -218,7 +234,6 @@ show_summary() {
     echo "Good luck!"
     echo
 }
-
 
 
 detect_os
