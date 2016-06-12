@@ -74,6 +74,11 @@ determine_requirements() {
 					;;
 			esac
 			;;
+		gentoo)
+			devtools_host_pkg_tool=emerge
+			devtools_host_pkg_list="dev-vcs/git dev-vcs/bzr sys-devel/automake sys-devel/autoconf dev-util/indent sys-devel/make sys-devel/gcc sys-fs/squashfs-tools dev-lang/go"
+			;;
+
 		*)
 			echo "Unsupported distribution: $devtools_ID"
 			echo "Please read this script and improve it!"
@@ -87,6 +92,16 @@ install_native_packages() {
 	# Check if there is anything to do first
 	devtools_install_needed=no
 	case "$devtools_host_pkg_tool" in
+		emerge)
+			set -x
+			for devtools_host_pkg in $devtools_host_pkg_list; do
+				if ! emerge --pretend --quiet "$devtools_host_pkg" | grep -v -F '[ebuild   R   ]'; then
+					devtools_install_needed=yes
+					break
+				fi
+			done
+			set +x
+			;;
 		yum|zypper)
 			for devtools_host_pkg in $devtools_host_pkg_list; do
 				if ! rpm -q --quiet "$devtools_host_pkg"; then
@@ -104,6 +119,9 @@ install_native_packages() {
 		return
 	fi
 	case "$devtools_host_pkg_tool" in
+		emerge)
+			devtools_host_pkg_install_cmd="emerge $devtools_host_pkg_list"
+			;;
 		yum)
 			devtools_host_pkg_install_cmd="yum install $devtools_host_pkg_list"
 			;;
