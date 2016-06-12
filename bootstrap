@@ -176,7 +176,7 @@ install_prebuilt_go() {
 			echo "The file is: $devtools_go_dist"
 			echo "The expected checksum was: $devtools_go_dist_sha512"
 			echo
-			echo "If the file is corrupted then please remove it and re-run this script"
+			echo "Please inspect and remove it then re-run this script."
 			echo "If the problem persists please report this problem using:"
 			echo "https://github.com/zyga/devtools/issues/new"
 			exit 1
