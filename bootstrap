@@ -69,6 +69,20 @@ determine_requirements_rhel() {
 	esac
 }
 
+determine_requirements_fedora() {
+	case "$devtools_VERSION_ID" in
+		24)
+			devtools_host_pkg_tool=dnf
+			devtools_host_pkg_list="git bzr automake autoconf indent make gcc squashfs-tools golang"
+			;;
+		*)
+			echo "Unsupported Fedora version: $devtools_VERSION_ID"
+			echo "Please read this script and improve it!"
+			exit 1
+			;;
+	esac
+}
+
 determine_requirements_opensuse() {
 	case "$devtools_VERSION_ID" in
 		42.1)
@@ -100,6 +114,7 @@ determine_requirements_other() {
 
 determine_requirements() {
 	case "$devtools_ID" in
+		fedora) determine_requirements_fedora ;;
 		gentoo) determine_requirements_gentoo ;;
 		opensuse) determine_requirements_opensuse ;;
 		rhel) determine_requirements_rhel ;;
@@ -130,7 +145,7 @@ install_native_packages() {
 			done
 			set +x
 			;;
-		yum|zypper)
+		yum|zypper|dnf)
 			for devtools_host_pkg in $devtools_host_pkg_list; do
 				if ! rpm -q --quiet "$devtools_host_pkg"; then
 					devtools_install_needed=yes
@@ -155,6 +170,9 @@ install_native_packages() {
 			;;
 		yum)
 			devtools_host_pkg_install_cmd="yum install $devtools_host_pkg_list"
+			;;
+		dnf)
+			devtools_host_pkg_install_cmd="dnf install $devtools_host_pkg_list"
 			;;
 		zypper)
 			devtools_host_pkg_install_cmd="zypper install $devtools_host_pkg_list"
