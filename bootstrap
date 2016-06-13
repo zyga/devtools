@@ -7,6 +7,9 @@
 #: Identifier of the operating system as described by os-release(5)
 devtools_ID=
 
+#: Identifier of the operating system as described by os-release(5)
+devtools_ID_LIKE=
+
 #: Version of the operating system as described by os-release(5)
 devtools_VERSION_ID=
 
@@ -35,6 +38,7 @@ devtools_profile_changed=no
 detect_os() {
 	if [ -e /etc/os-release ]; then
 		devtools_ID="$( . /etc/os-release && echo "${ID:-linux}" )"
+		devtools_ID_LIKE="$( . /etc/os-release && echo "${ID_LIKE}" )"
 		devtools_VERSION_ID="$( . /etc/os-release && echo "${VERSION_ID}" )"
 		devtools_PRETTY_NAME="$( . /etc/os-release && echo "${PRETTY_NAME}" )"
 	else
@@ -42,6 +46,12 @@ detect_os() {
 		echo "Please read this script and improve it!"
 		exit 1
 	fi
+}
+
+
+determine_requirements_like_debian() {
+	devtools_host_pkg_tool=apt
+	devtools_host_pkg_list="git bzr automake autoconf indent make gcc squashfs-tools golang-go"
 }
 
 
@@ -78,11 +88,14 @@ determine_requirements() {
 			devtools_host_pkg_tool=emerge
 			devtools_host_pkg_list="dev-vcs/git dev-vcs/bzr sys-devel/automake sys-devel/autoconf dev-util/indent sys-devel/make sys-devel/gcc sys-fs/squashfs-tools dev-lang/go"
 			;;
-
 		*)
-			echo "Unsupported distribution: $devtools_ID"
-			echo "Please read this script and improve it!"
-			exit 1
+			if [ "${devtools_ID_LIKE}" = "debian" ]; then
+				determine_requirements_like_debian
+			else
+				echo "Unsupported distribution: $devtools_ID"
+				echo "Please read this script and improve it!"
+				exit 1
+			fi
 			;;
 	esac
 }
@@ -92,6 +105,14 @@ install_native_packages() {
 	# Check if there is anything to do first
 	devtools_install_needed=no
 	case "$devtools_host_pkg_tool" in
+		apt)
+			for devtools_host_pkg in $devtools_host_pkg_list; do
+				if ! dpkg --status "$devtools_host_pkg" | grep -F -q 'Status: install ok installed'; then
+					devtools_install_needed=yes
+					break
+				fi
+			done
+			;;
 		emerge)
 			set -x
 			for devtools_host_pkg in $devtools_host_pkg_list; do
@@ -119,6 +140,9 @@ install_native_packages() {
 		return
 	fi
 	case "$devtools_host_pkg_tool" in
+		apt)
+			devtools_host_pkg_install_cmd="apt install $devtools_host_pkg_list"
+			;;
 		emerge)
 			devtools_host_pkg_install_cmd="emerge $devtools_host_pkg_list"
 			;;
