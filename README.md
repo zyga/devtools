@@ -3,7 +3,7 @@
 This repository holds my personal snappy development tools.  Improvements are
 welcome, just shoot merge requests at me.
 
-My work-flow involves using a checkout of http://github.com/snapcore/snappy
+My work-flow involves using a checkout of http://github.com/snapcore/snapd
 in my ``$GOPATH``, building and testing various parts of snappy during daily
 development.
 
