@@ -303,6 +303,7 @@ run_commands() {
                 if [ -n "$devtools_host" ]; then
                     echo "   Use 'sudo ./${CMD_PREFIX}snap' on anther console to talk to this snapd"
                     run_on_target sudo -H $devtools_systemd_activate $devtools_systemd_activate_opts -l /run/snapd.socket ./${CMD_PREFIX}snapd
+                    run_on_target sudo pkill -f ${CMD_PREFIX}snapd
                 else
                     echo "   Use 'sudo ./snap.$GOARCH' on anther console to talk to this snapd"
                     sudo -H $devtools_systemd_activate $devtools_systemd_activate_opts -l /run/snapd.socket ./snapd.${GOARCH}
