@@ -121,6 +121,9 @@ while [ "$1" != '' ]; do
             devtools_host="$(echo "$1" | cut -d = -f 2)"
             shift
             ;;
+        run-snapd)
+            need_local_systemd=1
+            ;& # fall-through
         snap|snapd|setup|restore|inspect|run-snapd|use-staging)
             devtools_cmds="$devtools_cmds $1"
             shift
@@ -132,19 +135,29 @@ while [ "$1" != '' ]; do
     esac
 done
 
-# Find systemd-activate
-for devtools_systemd_activate in /lib/systemd/systemd-activate /usr/lib/systemd/systemd-activate; do
-    if [ -e "$devtools_systemd_activate" ]; then
-        break
+if [ "$devtools_arch" != "$(uname -m)" ]; then
+    cross_compile=1
+    need_local_systemd=0
+else
+    cross_compile=0
+fi
+
+if [ $need_local_systemd  ]
+then
+    # Find systemd-activate
+    for devtools_systemd_activate in /lib/systemd/systemd-journald /usr/lib/systemd/systemd-journald; do
+        if [ -e "$devtools_systemd_activate" ]; then
+            break
+        fi
+    done
+    if [ ! -e "$devtools_systemd_activate" ]; then
+        echo "NOTE: This system doesn't seem to have systemd installed."
+        echo "Currently snapd requires systemd (though we are working to remove"
+        echo "this requirement) and devtools is no different."
+        echo "Please work on supporting your init system by sending pull requests"
+        echo "or opening isssues on github.com/zyga/devtools"
+        exit 1
     fi
-done
-if [ ! -e "$devtools_systemd_activate" ]; then
-    echo "NOTE: This systemd doesn't seem to have systemd installed."
-    echo "Currently snapd requires systemd (though we are working to remove"
-    echo "this requirement) and devtools is no different."
-    echo "Please work on supporting your init system by sending pull requests"
-    echo "or opening isssues on github.com/zyga/devtools"
-    exit 1
 fi
 
 check_connectivity() {
@@ -220,7 +233,7 @@ show_summary() {
     echo "== Summary =="
     case "$devtools_arch" in
         *)
-            if [ "$devtools_arch" != "$(uname -m)" ]; then
+            if [ $cross_compile == 1 ]; then
                 echo " - cross-compile binaries for $devtools_arch"
             else
                 echo " - compile binaries for $devtools_arch"
@@ -234,7 +247,12 @@ show_summary() {
         no)
             case "$devtools_host" in
                 '')
-                    echo " - run everything locally"
+                    if [ $cross_compile == 1 ]; then
+                        echo " - not running anything as we are cross-compiling"
+
+                    else
+                        echo " - run everything locally"
+                    fi
                     ;;
                 *)
                     echo " - ssh to '$devtools_host' and run remotely"
