@@ -291,7 +291,7 @@ run_commands() {
                 ;;
             use-staging)
                 echo " - switched to staging server"
-                devtools_systemd_activate_opts="--setenv=SNAPPY_USE_STAGING_MYAPPS=1 --setenv=SNAPPY_USE_STAGING_CPI=1 --setenv=SNAPPY_USE_STAGING_SAS=1"
+                devtools_systemd_activate_opts="--setenv=SNAPPY_USE_STAGING_STORE=1"
                 shift
                 ;;
             run-snapd)
