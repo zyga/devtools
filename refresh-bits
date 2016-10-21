@@ -36,6 +36,10 @@ devtools_cmds=""
 #: This is only used to pass environment required to use the staging server.
 devtools_systemd_activate_opts=""
 
+#: Option pass to the go build command.
+#; Used to enable using test keys against the staging store.
+devtools_go_build_tags=""
+
 #: Prefix of all the locally compiled executables.
 #: This is done so that snap/snapd don't clash with any directories.
 #: It also helps to identify devtools if people report odd bugs.
@@ -260,7 +264,7 @@ run_commands() {
         case "$1" in
             snap|snapd)
                 echo " - building $1"
-                go build -o "$1.$GOARCH" "github.com/snapcore/snapd/cmd/$1" || exit 1
+                go build $devtools_go_build_tags -o "$1.$GOARCH"  "github.com/snapcore/snapd/cmd/$1" || exit 1
                 if [ -n "$devtools_host" ]; then
                     echo "Copying $1 to target device..."
                     scp $devtools_ssh_opts "$1.$GOARCH" "$devtools_host:${CMD_PREFIX}$1" || exit 1
@@ -292,6 +296,7 @@ run_commands() {
             use-staging)
                 echo " - switched to staging server"
                 devtools_systemd_activate_opts="--setenv=SNAPPY_USE_STAGING_STORE=1"
+                devtools_go_build_tags="-tags withtestkeys"
                 shift
                 ;;
             run-snapd)
