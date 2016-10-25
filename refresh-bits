@@ -12,8 +12,7 @@ devtools_host=
 
 #: SSH options to use.
 #: Those option are optimized for non-interactive key authentication.
-devtools_ssh_opts="-o User=ubuntu"
-devtools_ssh_opts="$devtools_ssh_opts -o BatchMode=yes"
+devtools_ssh_opts="-o BatchMode=yes"
 devtools_ssh_opts="$devtools_ssh_opts -o UserKnownHostsFile=/dev/null"
 devtools_ssh_opts="$devtools_ssh_opts -o CheckHostIP=no"
 devtools_ssh_opts="$devtools_ssh_opts -o StrictHostKeyChecking=no"
