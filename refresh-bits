@@ -135,21 +135,6 @@ while [ "$1" != '' ]; do
     esac
 done
 
-# Find systemd-activate
-for devtools_systemd_activate in /lib/systemd/systemd-activate /usr/lib/systemd/systemd-activate; do
-    if [ -e "$devtools_systemd_activate" ]; then
-        break
-    fi
-done
-if [ ! -e "$devtools_systemd_activate" ]; then
-    echo "NOTE: This systemd doesn't seem to have systemd installed."
-    echo "Currently snapd requires systemd (though we are working to remove"
-    echo "this requirement) and devtools is no different."
-    echo "Please work on supporting your init system by sending pull requests"
-    echo "or opening isssues on github.com/zyga/devtools"
-    exit 1
-fi
-
 check_connectivity() {
     # If we are operating on a remote machine check if we can connect
     if [ -n "$devtools_host" ]; then
@@ -319,6 +304,18 @@ run_commands() {
     done
     echo "== All commands processed =="
 }
+
+# Find systemd-activate
+devtools_systemd_activate=$(run_on_target find /lib/systemd -name systemd-activate || find /usr/lib/systemd -name systemd-activate)
+
+if [ -z "$devtools_systemd_activate" ]; then
+    echo "NOTE: The target doesn't seem to have systemd installed."
+    echo "Currently snapd requires systemd (though we are working to remove"
+    echo "this requirement) and devtools is no different."
+    echo "Please work on supporting your init system by sending pull requests"
+    echo "or opening isssues on github.com/zyga/devtools"
+    exit 1
+fi
 
 check_connectivity
 probe_architecture
