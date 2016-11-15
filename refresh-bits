@@ -62,6 +62,7 @@ show_help() {
     echo
     echo "Commands:"
     echo "    snap          Compile and copy 'snap'"
+    echo "    snap-exec     Compile and copy 'snap-exec'"
     echo "    snapd         Compile and copy 'snapd'"
     echo "    setup         Stop 'snapd' running on the machine"
     echo "    restore       Restore regular snapd running on the machine"
@@ -124,7 +125,7 @@ while [ "$1" != '' ]; do
             devtools_host="$(echo "$1" | cut -d = -f 2)"
             shift
             ;;
-        snap|snapd|setup|restore|inspect|run-snapd|use-staging)
+        snap|snap-exec|snapd|setup|restore|inspect|run-snapd|use-staging)
             devtools_cmds="$devtools_cmds $1"
             shift
             ;;
@@ -246,7 +247,7 @@ run_commands() {
     echo "== Executing Commands =="
     while [ -n "$1" ]; do
         case "$1" in
-            snap|snapd)
+            snap|snap-exec|snapd)
                 echo " - building $1"
                 go build $devtools_go_build_tags -o "$1.$GOARCH"  "github.com/snapcore/snapd/cmd/$1" || exit 1
                 if [ -n "$devtools_host" ]; then
