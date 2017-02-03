@@ -292,7 +292,7 @@ run_commands() {
                 trap 'printf "\n - interrupted!\n"' INT
                 if [ -n "$devtools_host" ]; then
                     echo "   Use 'sudo ./${CMD_PREFIX}snap' on another console to talk to this snapd"
-					( sleep 3s && run_on_target ssudo chmod 666 /run/snapd*.socket ) &
+					( sleep 3s && run_on_target sudo chmod 666 /run/snapd*.socket ) &
                     run_on_target sudo -H $devtools_systemd_activate $devtools_systemd_activate_opts -l /run/snapd.socket -l /run/snapd-snap.socket ./${CMD_PREFIX}snapd
                     run_on_target sudo pkill -f ${CMD_PREFIX}snapd
                 else
